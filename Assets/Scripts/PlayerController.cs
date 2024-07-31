@@ -54,6 +54,8 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         
         leg.weight = 0;
+
+        
     }
     
     private void Update()
