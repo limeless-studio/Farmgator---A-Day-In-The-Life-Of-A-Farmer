@@ -20,6 +20,7 @@ public class Interact : MonoBehaviour
     private float fadeInAndOutTimer = 2.3f;
     private float fadeInAndOutTime;
     public bool destroyOnInteract;
+    public GameObject destroyEffect;
     DayNightCycle dayNightCycle;
 
     [Header("Change Player Locaiton")]
@@ -144,6 +145,18 @@ public class Interact : MonoBehaviour
             }
         }
     }
+    
+    public void Highlight()
+    {
+        foreach (var outline in outlineFxs)
+            outline.enabled = true;
+    }
+    
+    public void Unhighlight()
+    {
+        foreach (var outline in outlineFxs)
+            outline.enabled = false;
+    }
 
     public void Interaction(bool status)
     {
@@ -178,29 +191,25 @@ public class Interact : MonoBehaviour
                 Onsen();
             }
         }
-        
-        if (outlineFxs.Length > 0) 
-            foreach (var outline in outlineFxs)
-                outline.enabled = status;
     }
 
     public void CompleteTask()
     {
         if (!taskComplete)
         {
+            if (isCoin)
+            {
+                audioSource.PlayOneShot(audioClipCoin);
+                isCoin = false;
+            }
+            if (isFish)
+            {
+                audioSource.PlayOneShot(audioClipHarvest);
+                isFish = false;
+            }
+            
             if(fadeInAndOut && !startFadeInAndOut)
             {
-                if (isCoin)
-                {
-                    audioSource.PlayOneShot(audioClipCoin);
-                    isCoin = false;
-                }
-                if (isFish)
-                {
-                    audioSource.PlayOneShot(audioClipHarvest);
-                    isFish = false;
-                }
-
                 gameManager.IncreaseOpacity();
                 startFadeInAndOut = true;
                 fadeInAndOutTime = fadeInAndOutTimer;
@@ -222,7 +231,11 @@ public class Interact : MonoBehaviour
                     fadeInAndOut = false;
                     playerController.canMove = true;
                 }
-                Destroy(gameObject);
+                if (destroyEffect)
+                {
+                    Instantiate(destroyEffect, transform.position + Vector3.up * .5f, Quaternion.identity);
+                }
+                StartCoroutine(DestroyRoutine());
             }
             if (fadeInAndOut)
             {
@@ -233,6 +246,26 @@ public class Interact : MonoBehaviour
             }
         }
     }
+    
+    IEnumerator DestroyRoutine()
+    {
+        // Scale down the object and move towards the player
+        Transform player = PlayerController.Instance.transform;
+        float bp = 1f;
+        AnimationCurve curve = AnimationCurve.EaseInOut(0, bp, 1, bp);
+        curve.AddKey(0.5f, bp + .5f);
+        while (transform.localScale.magnitude > 0.01f)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.zero, Time.deltaTime * 2);
+            var pos = player.position + Vector3.up * curve.Evaluate(1 - (transform.position - player.position).magnitude / 10);
+            transform.position = Vector3.Lerp(transform.position, pos, Time.deltaTime * 2);
+            yield return null;
+        }
+        
+        // Destroy the object
+        Destroy(gameObject);
+    }
+    
     public void Animate()
     {
   

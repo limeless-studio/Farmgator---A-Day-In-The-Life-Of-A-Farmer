@@ -6,6 +6,7 @@ using UnityEngine.Animations.Rigging;
 
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance; 
     private enum RigAnimMode
     {
         off,
@@ -46,6 +47,15 @@ public class PlayerController : MonoBehaviour
 
     public bool facingFrog;
     public bool kickingFrog;
+
+    private void Awake()
+    {
+        if (!Instance)
+        {
+            Instance = this;
+        }
+    }
+
     private void Start()
     {
         canMove = true;
@@ -54,8 +64,6 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         
         leg.weight = 0;
-
-        
     }
     
     private void Update()
@@ -220,7 +228,7 @@ public class PlayerController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
         // transform.rotation = rotation;
     }
-    public void StopInteraction()
+    public void StopPlayerInteraction()
     {
         interacting = false;
         interacting_Salute = false;
@@ -236,6 +244,7 @@ public class PlayerController : MonoBehaviour
         if (other.CompareTag("Interact"))
         {
             Interact theOther = other.GetComponent<Interact>();
+            theOther.Highlight();
 
             if (theOther.switchCamera)
             {
@@ -316,6 +325,8 @@ public class PlayerController : MonoBehaviour
         if (other.CompareTag("Interact"))
         {
             Interact theOther = other.GetComponent<Interact>();
+            
+            theOther.Unhighlight();
 
             if (theOther.switchCamera)
             {
